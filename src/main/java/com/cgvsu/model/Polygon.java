@@ -1,44 +1,59 @@
 package com.cgvsu.model;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class Polygon {
 
-    private ArrayList<Integer> vertexIndices;
-    private ArrayList<Integer> textureVertexIndices;
-    private ArrayList<Integer> normalIndices;
+    private final ArrayList<Integer> vertexIndices = new ArrayList<>();
+    private final ArrayList<Integer> textureVertexIndices = new ArrayList<>();
+    private final ArrayList<Integer> normalIndices = new ArrayList<>();
 
-
-    public Polygon() {
-        vertexIndices = new ArrayList<Integer>();
-        textureVertexIndices = new ArrayList<Integer>();
-        normalIndices = new ArrayList<Integer>();
+    // Добавление одной вершины (самый удобный способ при парсинге)
+    public void addVertex(int vertexIndex) {
+        vertexIndices.add(vertexIndex);
     }
 
-    public void setVertexIndices(ArrayList<Integer> vertexIndices) {
-        assert vertexIndices.size() >= 3;
-        this.vertexIndices = vertexIndices;
+    public void addTextureVertex(int textureIndex) {
+        textureVertexIndices.add(textureIndex);
     }
 
-    public void setTextureVertexIndices(ArrayList<Integer> textureVertexIndices) {
-        assert textureVertexIndices.size() >= 3;
-        this.textureVertexIndices = textureVertexIndices;
+    public void addNormal(int normalIndex) {
+        normalIndices.add(normalIndex);
     }
 
-    public void setNormalIndices(ArrayList<Integer> normalIndices) {
-        assert normalIndices.size() >= 3;
-        this.normalIndices = normalIndices;
+    // Геттеры — возвращаем неизменяемые представления
+    public List<Integer> getVertexIndices() {
+        return Collections.unmodifiableList(vertexIndices);
     }
 
-    public ArrayList<Integer> getVertexIndices() {
-        return vertexIndices;
+    public List<Integer> getTextureVertexIndices() {
+        return Collections.unmodifiableList(textureVertexIndices);
     }
 
-    public ArrayList<Integer> getTextureVertexIndices() {
-        return textureVertexIndices;
+    public List<Integer> getNormalIndices() {
+        return Collections.unmodifiableList(normalIndices);
     }
 
-    public ArrayList<Integer> getNormalIndices() {
-        return normalIndices;
+    public int getVertexCount() {
+        return vertexIndices.size();
+    }
+
+    public boolean hasTextureCoordinates() {
+        return !textureVertexIndices.isEmpty();
+    }
+
+    public boolean hasNormals() {
+        return !normalIndices.isEmpty();
+    }
+
+    @Override
+    public String toString() {
+        return "Polygon{" +
+                "vertices=" + vertexIndices +
+                ", tex=" + (hasTextureCoordinates() ? textureVertexIndices : "[]") +
+                ", normals=" + (hasNormals() ? normalIndices : "[]") +
+                '}';
     }
 }
