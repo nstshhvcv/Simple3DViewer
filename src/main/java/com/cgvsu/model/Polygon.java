@@ -6,9 +6,9 @@ import java.util.List;
 
 public class Polygon {
 
-    private final ArrayList<Integer> vertexIndices = new ArrayList<>();
-    private final ArrayList<Integer> textureVertexIndices = new ArrayList<>();
-    private final ArrayList<Integer> normalIndices = new ArrayList<>();
+    public final ArrayList<Integer> vertexIndices = new ArrayList<>();
+    public final ArrayList<Integer> textureVertexIndices = new ArrayList<>();
+    public final ArrayList<Integer> normalIndices = new ArrayList<>();
 
     // Добавление одной вершины (самый удобный способ при парсинге)
     public void addVertex(int vertexIndex) {
