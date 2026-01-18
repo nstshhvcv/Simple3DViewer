@@ -6,9 +6,9 @@ import java.util.List;
 
 public class Polygon {
 
-    public final ArrayList<Integer> vertexIndices = new ArrayList<>();
-    public final ArrayList<Integer> textureVertexIndices = new ArrayList<>();
-    public final ArrayList<Integer> normalIndices = new ArrayList<>();
+    private final ArrayList<Integer> vertexIndices = new ArrayList<>();
+    private final ArrayList<Integer> textureVertexIndices = new ArrayList<>();
+    private final ArrayList<Integer> normalIndices = new ArrayList<>();
 
     // Добавление одной вершины (самый удобный способ при парсинге)
     public void addVertex(int vertexIndex) {
@@ -46,6 +46,35 @@ public class Polygon {
 
     public boolean hasNormals() {
         return !normalIndices.isEmpty();
+    }
+
+    // Новый метод для сдвига индексов вершин
+    public void decrementVertexIndicesGreaterThan(int index) {
+        for (int i = 0; i < vertexIndices.size(); i++) {
+            int vi = vertexIndices.get(i);
+            if (vi > index) {
+                vertexIndices.set(i, vi - 1);
+            }
+        }
+    }
+
+    // Аналогично для текстур и нормалей, если нужно (пока только для вершин)
+    public void decrementTextureIndicesGreaterThan(int index) {
+        for (int i = 0; i < textureVertexIndices.size(); i++) {
+            int ti = textureVertexIndices.get(i);
+            if (ti > index) {
+                textureVertexIndices.set(i, ti - 1);
+            }
+        }
+    }
+
+    public void decrementNormalIndicesGreaterThan(int index) {
+        for (int i = 0; i < normalIndices.size(); i++) {
+            int ni = normalIndices.get(i);
+            if (ni > index) {
+                normalIndices.set(i, ni - 1);
+            }
+        }
     }
 
     @Override

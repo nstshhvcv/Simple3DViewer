@@ -47,6 +47,32 @@ public class Model {
         return Collections.unmodifiableList(polygons);
     }
 
+    // Удаление вершины
+    public void removeVertex(int index) {
+        if (index < 0 || index >= vertices.size()) {
+            throw new IllegalArgumentException("Invalid vertex index: " + index);
+        }
+        vertices.remove(index);
+
+        // Удаляем полигоны, использующие эту вершину
+        polygons.removeIf(p -> p.getVertexIndices().contains(index));
+
+        // Сдвигаем индексы в оставшихся полигонах
+        for (Polygon p : polygons) {
+            p.decrementVertexIndicesGreaterThan(index);
+        }
+
+        // Для текстур и нормалей — опционально, если удаляем вершину, но индексы отдельные
+    }
+
+    // Удаление полигона
+    public void removePolygon(int index) {
+        if (index < 0 || index >= polygons.size()) {
+            throw new IllegalArgumentException("Invalid polygon index: " + index);
+        }
+        polygons.remove(index);
+    }
+
     // Для отладки удобно
     @Override
     public String toString() {
@@ -57,4 +83,5 @@ public class Model {
                 ", polygons=" + polygons.size() +
                 '}';
     }
+
 }

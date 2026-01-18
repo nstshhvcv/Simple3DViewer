@@ -1,5 +1,8 @@
 package com.cgvsu.render_engine;
-import javax.vecmath.*;
+
+import com.cgvsu.math.Vector2f;  // Ваш Vector2f для 2D координат
+import javax.vecmath.Matrix4f;
+import javax.vecmath.Vector3f;     // Явно импортируем только из vecmath
 
 public class GraphicConveyor {
 
@@ -52,7 +55,8 @@ public class GraphicConveyor {
         return result;
     }
 
-    public static Vector3f multiplyMatrix4ByVector3(final Matrix4f matrix, final Vector3f vertex) {
+
+    public static Vector3f multiplyMatrix4ByVector3(final Matrix4f matrix, final com.cgvsu.math.Vector3f vertex) {
         final float x = (vertex.x * matrix.m00) + (vertex.y * matrix.m10) + (vertex.z * matrix.m20) + matrix.m30;
         final float y = (vertex.x * matrix.m01) + (vertex.y * matrix.m11) + (vertex.z * matrix.m21) + matrix.m31;
         final float z = (vertex.x * matrix.m02) + (vertex.y * matrix.m12) + (vertex.z * matrix.m22) + matrix.m32;
@@ -60,7 +64,8 @@ public class GraphicConveyor {
         return new Vector3f(x / w, y / w, z / w);
     }
 
-    public static Point2f vertexToPoint(final Vector3f vertex, final int width, final int height) {
-        return new Point2f(vertex.x * width + width / 2.0F, -vertex.y * height + height / 2.0F);
+    // Параметр — явно javax.vecmath.Vector3f, возврат — ваш Vector2f
+    public static Vector2f vertexToPoint(final Vector3f vertex, final int width, final int height) {
+        return new Vector2f(vertex.x * width + width / 2.0F, -vertex.y * height + height / 2.0F);
     }
 }
