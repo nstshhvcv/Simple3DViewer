@@ -65,7 +65,6 @@
                     <target>17</target>
                 </configuration>
             </plugin>
-
             <!--
             for building jar using maven:
             mvn clean -Dmaven.clean.failOnError=false compile assembly:single -DskipTests=true
