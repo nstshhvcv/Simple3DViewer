@@ -1,0 +1,361 @@
+/* style.css */
+.root {
+    -fx-font-family: 'Segoe UI', 'Arial', sans-serif;
+    -fx-font-size: 14px;
+}
+
+/* ===== ТЕМНАЯ ТЕМА (белый текст везде) ===== */
+.anchor-pane-dark {
+    -fx-background-color: linear-gradient(to bottom, #121212 0%, #1a1a1a 100%);
+}
+
+/* Светлая тема */
+.anchor-pane-light {
+    -fx-background-color: linear-gradient(to bottom, #f8f9fa 0%, #e9ecef 100%);
+}
+
+/* ===== МЕНЮ В ТЕМНОЙ ТЕМЕ ===== */
+.anchor-pane-dark .modern-menu {
+    -fx-background-color: #1e1e1e;
+    -fx-border-color: #2d2d2d;
+    -fx-border-width: 0 0 1 0;
+}
+
+/* Текст меню в темной теме - ВСЕГДА БЕЛЫЙ */
+.anchor-pane-dark .modern-menu .menu .label {
+    -fx-text-fill: #ffffff !important;
+}
+
+.anchor-pane-dark .modern-menu .menu:hover .label {
+    -fx-text-fill: #ffffff !important;
+}
+
+.anchor-pane-dark .modern-menu .menu:showing .label {
+    -fx-text-fill: #ffffff !important;
+}
+
+.anchor-pane-dark .modern-menu .menu {
+    -fx-padding: 8 15;
+}
+
+.anchor-pane-dark .modern-menu .menu:hover {
+    -fx-background-color: #3a3a3a;
+    -fx-background-radius: 4;
+}
+
+.anchor-pane-dark .modern-menu .menu:showing {
+    -fx-background-color: #007acc;
+    -fx-background-radius: 4 4 0 0;
+}
+
+/* ===== МЕНЮ В СВЕТЛОЙ ТЕМЕ ===== */
+.anchor-pane-light .modern-menu {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #dee2e6;
+    -fx-border-width: 0 0 1 0;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.08), 5, 0, 0, 1);
+}
+
+/* Текст меню в светлой теме - ЧЕРНЫЙ по умолчанию */
+.anchor-pane-light .modern-menu .menu .label {
+    -fx-text-fill: #212529 !important;
+}
+
+/* При наведении - остается ЧЕРНЫМ */
+.anchor-pane-light .modern-menu .menu:hover .label {
+    -fx-text-fill: #212529 !important;
+}
+
+/* При открытии меню - остается ЧЕРНЫМ */
+.anchor-pane-light .modern-menu .menu:showing .label {
+    -fx-text-fill: #212529 !important;
+}
+
+.anchor-pane-light .modern-menu .menu {
+    -fx-padding: 8 15;
+}
+
+/* Фон при наведении в светлой теме - светлый */
+.anchor-pane-light .modern-menu .menu:hover {
+    -fx-background-color: #e9ecef;
+    -fx-background-radius: 4;
+}
+
+/* Фон при открытии меню в светлой теме - чуть темнее */
+.anchor-pane-light .modern-menu .menu:showing {
+    -fx-background-color: #dee2e6;
+    -fx-background-radius: 4 4 0 0;
+}
+
+/* ===== КОНТЕКСТНОЕ МЕНЮ В ТЕМНОЙ ТЕМЕ ===== */
+.anchor-pane-dark .context-menu {
+    -fx-background-color: #252525;
+    -fx-border-color: #3a3a3a;
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-padding: 5 0;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 10, 0, 0, 3);
+}
+
+/* Menu Items в темной теме */
+.anchor-pane-dark .menu-item {
+    -fx-background-color: #252525;
+}
+
+.anchor-pane-dark .menu-item .label {
+    -fx-text-fill: #ffffff !important;
+}
+
+.anchor-pane-dark .menu-item:hover .label {
+    -fx-text-fill: #ffffff !important;
+}
+
+.anchor-pane-dark .menu-item:armed .label {
+    -fx-text-fill: #ffffff !important;
+}
+
+.anchor-pane-dark .menu-item:hover {
+    -fx-background-color: #2d2d2d;
+}
+
+.anchor-pane-dark .menu-item:armed {
+    -fx-background-color: #3a3a3a;
+}
+
+/* Menu Items в светлой теме */
+.anchor-pane-light .menu-item {
+    -fx-background-color: #ffffff;
+}
+
+.anchor-pane-light .menu-item .label {
+    -fx-text-fill: #212529 !important;
+}
+
+.anchor-pane-light .menu-item:hover .label {
+    -fx-text-fill: #212529 !important;
+}
+
+.anchor-pane-light .menu-item:armed .label {
+    -fx-text-fill: #212529 !important;
+}
+
+.anchor-pane-light .menu-item:hover {
+    -fx-background-color: #f8f9fa;
+}
+
+.anchor-pane-light .menu-item:armed {
+    -fx-background-color: #e9ecef;
+}
+
+/* ===== УСКОРИТЕЛИ КЛАВИШ ===== */
+.anchor-pane-dark .menu-item .accelerator-text {
+    -fx-text-fill: #cccccc !important;
+}
+
+.anchor-pane-dark .menu-item:hover .accelerator-text {
+    -fx-text-fill: #cccccc !important;
+}
+
+.anchor-pane-light .menu-item .accelerator-text {
+    -fx-text-fill: #6c757d !important;
+}
+
+.anchor-pane-light .menu-item:hover .accelerator-text {
+    -fx-text-fill: #6c757d !important;
+}
+
+/* ===== РАЗДЕЛИТЕЛИ ===== */
+.separator-menu-item .line {
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 3 0;
+}
+
+.anchor-pane-dark .separator-menu-item .line {
+    -fx-border-color: #3a3a3a;
+}
+
+.anchor-pane-light .separator-menu-item .line {
+    -fx-border-color: #dee2e6;
+}
+
+/* ===== КАНВАС ===== */
+.canvas-3d {
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.3), 15, 0.5, 0, 5);
+    -fx-border-width: 2;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}
+
+.anchor-pane-dark .canvas-3d {
+    -fx-background-color: #0d1117;
+    -fx-border-color: #3a3a3a;
+}
+
+.anchor-pane-light .canvas-3d {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #ced4da;
+}
+
+/* ===== УВЕДОМЛЕНИЯ ===== */
+.notification {
+    -fx-padding: 10 15;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.2), 10, 0, 0, 2);
+    -fx-font-size: 12px;
+    -fx-font-weight: 500;
+    -fx-text-fill: #ffffff;
+}
+
+.notification.info {
+    -fx-background-color: rgba(0, 123, 255, 0.9);
+}
+
+.notification.success {
+    -fx-background-color: rgba(40, 167, 69, 0.9);
+}
+
+.notification.error {
+    -fx-background-color: rgba(220, 53, 69, 0.9);
+}
+
+.notification.warning {
+    -fx-background-color: rgba(255, 193, 7, 0.9);
+}
+
+/* ===== АЛЕРТЫ ===== */
+.dialog-pane {
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}
+
+.anchor-pane-dark .dialog-pane {
+    -fx-background-color: #252525;
+    -fx-border-color: #3a3a3a;
+}
+
+.anchor-pane-dark .dialog-pane .label {
+    -fx-text-fill: #ffffff !important;
+}
+
+.anchor-pane-dark .dialog-pane .button {
+    -fx-text-fill: #ffffff;
+    -fx-background-color: #3a3a3a;
+    -fx-border-color: #007acc;
+}
+
+.anchor-pane-dark .dialog-pane .button:hover {
+    -fx-background-color: #007acc;
+}
+
+.anchor-pane-light .dialog-pane {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #dee2e6;
+}
+
+.anchor-pane-light .dialog-pane .label {
+    -fx-text-fill: #212529 !important;
+}
+
+.anchor-pane-light .dialog-pane .button {
+    -fx-text-fill: #212529;
+    -fx-background-color: #f8f9fa;
+    -fx-border-color: #6c757d;
+}
+
+.anchor-pane-light .dialog-pane .button:hover {
+    -fx-background-color: #e9ecef;
+}
+
+/* ===== АНИМАЦИИ ===== */
+@keyframes fadeIn {
+    from { -fx-opacity: 0; -fx-translate-y: -10; }
+    to { -fx-opacity: 1; -fx-translate-y: 0; }
+}
+
+.notification {
+    -fx-animation: fadeIn 0.3s ease-out;
+}
+
+/* ===== ДОПОЛНИТЕЛЬНЫЕ СТИЛИ ===== */
+/* Текст во всех элементах темной темы */
+.anchor-pane-dark .label,
+.anchor-pane-dark .text,
+.anchor-pane-dark .check-box .text,
+.anchor-pane-dark .radio-button .text {
+    -fx-text-fill: #ffffff !important;
+}
+
+/* Текст во всех элементах светлой темы */
+.anchor-pane-light .label,
+.anchor-pane-light .text,
+.anchor-pane-light .check-box .text,
+.anchor-pane-light .radio-button .text {
+    -fx-text-fill: #212529 !important;
+}
+
+/* Эффекты при наведении */
+.menu-item, .menu {
+    -fx-cursor: hand;
+    -fx-transition: all 0.2s ease;
+}
+
+/* Иконки в меню */
+.menu .graphic {
+    -fx-padding: 0 8 0 0;
+}
+
+/* Активное меню в темной теме */
+.anchor-pane-dark .menu:selected .label {
+    -fx-font-weight: bold;
+    -fx-text-fill: #4da6ff !important;
+}
+
+/* Активное меню в светлой теме */
+.anchor-pane-light .menu:selected .label {
+    -fx-font-weight: bold;
+    -fx-text-fill: #0056b3 !important;
+}
+
+/* Стиль для выпадающих подменю в светлой теме */
+.anchor-pane-light .menu .menu-item {
+    -fx-background-color: #ffffff;
+}
+
+.anchor-pane-light .menu .menu-item .label {
+    -fx-text-fill: #212529 !important;
+}
+
+.anchor-pane-light .menu .menu-item:hover {
+    -fx-background-color: #f8f9fa;
+}
+
+.anchor-pane-light .menu .menu-item:hover .label {
+    -fx-text-fill: #212529 !important;
+}
+
+/* Контекстное меню в светлой теме */
+.anchor-pane-light .context-menu {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #dee2e6;
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-padding: 5 0;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 3);
+}
+
+/* Специальный стиль для пункта смены темы в светлой теме */
+.anchor-pane-light .menu-item.theme-toggle {
+    -fx-background-color: #f8f9fa;
+}
+
+.anchor-pane-light .menu-item.theme-toggle:hover {
+    -fx-background-color: #e9ecef;
+}
+
+.anchor-pane-light .menu-item.theme-toggle .label {
+    -fx-text-fill: #212529 !important;
+}
