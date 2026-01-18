@@ -18,12 +18,12 @@
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
-            <version>17.0.0.1</version>
+            <version>21.0.1</version>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
-            <version>17.0.0.1</version>
+            <version>21.0.1</version>
         </dependency>
         <dependency>
             <groupId>java3d</groupId>
@@ -46,6 +46,16 @@
 
     <build>
         <plugins>
+            <!-- JavaFX плагин для запуска приложения -->
+            <plugin>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-maven-plugin</artifactId>
+                <version>0.0.8</version>
+                <configuration>
+                    <mainClass>com.cgvsu.Main</mainClass>
+                </configuration>
+            </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -55,6 +65,7 @@
                     <target>17</target>
                 </configuration>
             </plugin>
+
             <!--
             for building jar using maven:
             mvn clean -Dmaven.clean.failOnError=false compile assembly:single -DskipTests=true
@@ -100,6 +111,34 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+
+            <!-- Альтернативный плагин для запуска (если javafx-maven-plugin не работает) -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <mainClass>com.cgvsu.Main</mainClass>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-maven-plugin</artifactId>
+                <version>0.0.8</version>
+                <configuration>
+                    <mainClass>com.cgvsu.Main</mainClass>
+                    <options>
+                        <option>--add-opens=javafx.graphics/com.sun.glass.ui=ALL-UNNAMED</option>
+                        <option>--add-opens=javafx.graphics/com.sun.glass.ui.mac=ALL-UNNAMED</option>
+                        <option>--add-exports=javafx.graphics/com.sun.glass.ui=ALL-UNNAMED</option>
+                        <option>--add-exports=javafx.graphics/com.sun.javafx.application=ALL-UNNAMED</option>
+                        <option>-Dprism.order=sw</option>
+                        <option>-Dprism.verbose=true</option>
+                        <option>-Djavafx.verbose=true</option>
+                        <option>-Dglass.disableGrab=true</option>
+                    </options>
+                </configuration>
             </plugin>
         </plugins>
     </build>
