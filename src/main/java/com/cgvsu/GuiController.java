@@ -12,14 +12,16 @@ import com.cgvsu.render_engine.RenderEngine;
 import com.cgvsu.math.Vector2f;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
+import javafx.animation.PauseTransition;
 import javafx.animation.Timeline;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
+import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.control.Alert;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -34,12 +36,13 @@ import java.util.List;
 
 public class GuiController {
 
-    private static final float TRANSLATION = 0.5f;
-    private static final float ROTATION_ANGLE = (float) Math.toRadians(5);
+    private float TRANSLATION = 0.5f;
+    private float ROTATION_ANGLE = (float) Math.toRadians(5);
     private static final float SCALE_FACTOR = 1.1f;
 
     @FXML private AnchorPane anchorPane;
     @FXML private Canvas canvas;
+    @FXML private VBox notificationContainer;
 
     private final List<SceneObject> sceneObjects = new ArrayList<>();
     private int selectedModelIndex = -1;
@@ -50,6 +53,7 @@ public class GuiController {
             1.0F, 1, 0.01F, 100);
 
     private Timeline timeline;
+    private boolean isDarkTheme = true;
 
     // Режимы редактирования
     private enum EditMode { NONE, VERTEX, POLYGON }
@@ -89,6 +93,9 @@ public class GuiController {
 
         // Выбор вершин/полигонов по клику
         canvas.setOnMouseClicked(this::handleMouseClick);
+
+        // Инициализация уведомлений
+        notificationContainer.setVisible(false);
     }
 
     // ---------------------------------------------------------------
@@ -123,14 +130,10 @@ public class GuiController {
                     selectedVertexIndex = -1;
                 }
             }
+            showNotification("Selected model: " + sceneObjects.get(selectedModelIndex).getName(), "info");
         }
-        // Опционально: сброс модели, если клик в пустоту
-        // else {
-        //     selectedModelIndex = -1;
-        //     selectedVertexIndex = -1;
-        //     selectedPolygonIndex = -1;
-        // }
     }
+
     private int findClosestModel(double mx, double my, int w, int h) {
         double globalMinDist = Double.MAX_VALUE;
         int bestIndex = -1;
@@ -144,8 +147,6 @@ public class GuiController {
 
             // Ищем минимальное расстояние до любой вершины модели
             for (com.cgvsu.math.Vector3f vert : model.getVertices()) {
-
-
                 Vector2f p = GraphicConveyor.vertexToPoint(
                         GraphicConveyor.multiplyMatrix4ByVector3(mvp, vert), w, h);
 
@@ -153,18 +154,15 @@ public class GuiController {
                 if (dist < modelMinDist) modelMinDist = dist;
             }
 
-            // Бонус для уже выбранной модели
-
-
             if (modelMinDist < globalMinDist) {
                 globalMinDist = modelMinDist;
                 bestIndex = i;
             }
         }
 
-        // Порог теперь может быть маленьким — клик в пределах 80–150 пикселей от любой вершины
         return (globalMinDist < 120) ? bestIndex : -1;
     }
+
     private int findClosestVertex(Model model, Matrix4f mvp, double mx, double my, int w, int h) {
         double minDist = 12.0;
         int best = -1;
@@ -183,6 +181,7 @@ public class GuiController {
         }
         return best;
     }
+
     private Matrix4f getMVPForModel(int modelIndex) {
         if (modelIndex < 0 || modelIndex >= sceneObjects.size()) return new Matrix4f();
 
@@ -232,9 +231,7 @@ public class GuiController {
     // ---------------------------------------------------------------
     //                     Обработка клавиатуры
     // ---------------------------------------------------------------
-
     public void handleKey(KeyCode code) {
-
         // Удаление выбранного элемента
         if ((code == KeyCode.DELETE || code == KeyCode.BACK_SPACE) && selectedModelIndex >= 0) {
             Model model = sceneObjects.get(selectedModelIndex).getModel();
@@ -242,42 +239,42 @@ public class GuiController {
             if (editMode == EditMode.VERTEX && selectedVertexIndex >= 0) {
                 model.removeVertex(selectedVertexIndex);
                 selectedVertexIndex = -1;
+                showNotification("Vertex deleted successfully", "success");
             }
             else if (editMode == EditMode.POLYGON && selectedPolygonIndex >= 0) {
                 model.removePolygon(selectedPolygonIndex);
                 selectedPolygonIndex = -1;
+                showNotification("Polygon deleted successfully", "success");
             }
             return;
         }
-
-        // Управление камерой (всегда доступно)
-
     }
 
     // ---------------------------------------------------------------
     //              Переключение режимов редактирования
     // ---------------------------------------------------------------
-
     @FXML private void setEditModeNone() {
         editMode = EditMode.NONE;
         selectedVertexIndex = -1;
         selectedPolygonIndex = -1;
+        showNotification("Object selection mode activated", "info");
     }
 
     @FXML private void setEditModeVertex() {
         editMode = EditMode.VERTEX;
         selectedPolygonIndex = -1;
+        showNotification("Vertex selection mode activated", "info");
     }
 
     @FXML private void setEditModePolygon() {
         editMode = EditMode.POLYGON;
         selectedVertexIndex = -1;
+        showNotification("Polygon selection mode activated", "info");
     }
 
     // ---------------------------------------------------------------
-    //                    Загрузка / Сохранение (из твоего FXML)
+    //                    Загрузка / Сохранение
     // ---------------------------------------------------------------
-
     @FXML
     private void onOpenModelMenuItemClick() {
         FileChooser fc = new FileChooser();
@@ -291,8 +288,10 @@ public class GuiController {
             SceneObject obj = new SceneObject(model, file.getName());
             sceneObjects.add(obj);
             selectedModelIndex = sceneObjects.size() - 1;
+            showNotification("Model loaded: " + file.getName(), "success");
         } catch (IOException | ObjReaderException e) {
             showError("Ошибка загрузки модели", e.getMessage());
+            showNotification("Failed to load model: " + e.getMessage(), "error");
         }
     }
 
@@ -311,27 +310,50 @@ public class GuiController {
 
         try {
             SceneObject so = sceneObjects.get(selectedModelIndex);
-            Model toSave = so.getModel();  // или getTransformedModel(), если нужно
+            Model toSave = so.getModel();
             ObjWriter.write(toSave, file.getAbsolutePath());
+            showNotification("Model saved: " + file.getName(), "success");
         } catch (Exception e) {
             showError("Ошибка сохранения", e.getMessage());
+            showNotification("Failed to save model: " + e.getMessage(), "error");
         }
     }
 
     // ---------------------------------------------------------------
     //                     Камера (из меню Camera Options)
     // ---------------------------------------------------------------
+    @FXML public void handleCameraForward (ActionEvent e) {
+        camera.movePosition(new Vector3f(0, 0, -TRANSLATION));
+    }
+    @FXML public void handleCameraBackward(ActionEvent e) {
+        camera.movePosition(new Vector3f(0, 0,  TRANSLATION));
+    }
+    @FXML public void handleCameraLeft    (ActionEvent e) {
+        camera.movePosition(new Vector3f( TRANSLATION, 0, 0));
+    }
+    @FXML public void handleCameraRight   (ActionEvent e) {
+        camera.movePosition(new Vector3f(-TRANSLATION, 0, 0));
+    }
+    @FXML public void handleCameraUp      (ActionEvent e) {
+        camera.movePosition(new Vector3f(0,  TRANSLATION, 0));
+    }
+    @FXML public void handleCameraDown    (ActionEvent e) {
+        camera.movePosition(new Vector3f(0, -TRANSLATION, 0));
+    }
 
-    @FXML public void handleCameraForward (ActionEvent e) { camera.movePosition(new Vector3f(0, 0, -TRANSLATION)); }
-    @FXML public void handleCameraBackward(ActionEvent e) { camera.movePosition(new Vector3f(0, 0,  TRANSLATION)); }
-    @FXML public void handleCameraLeft    (ActionEvent e) { camera.movePosition(new Vector3f( TRANSLATION, 0, 0)); }
-    @FXML public void handleCameraRight   (ActionEvent e) { camera.movePosition(new Vector3f(-TRANSLATION, 0, 0)); }
-    @FXML public void handleCameraUp      (ActionEvent e) { camera.movePosition(new Vector3f(0,  TRANSLATION, 0)); }
-    @FXML public void handleCameraDown    (ActionEvent e) { camera.movePosition(new Vector3f(0, -TRANSLATION, 0)); }
+    @FXML
+    public void resetCamera() {
+        camera = new Camera(
+                new Vector3f(0, 0, 100),
+                new Vector3f(0, 0, 0),
+                1.0F, 1, 0.01F, 100
+        );
+        showNotification("Camera reset to default position", "info");
+    }
+
     // ---------------------------------------------------------------
     //                     Вспомогательные методы
     // ---------------------------------------------------------------
-
     private Matrix4f getMVPForSelectedModel() {
         if (selectedModelIndex < 0) return new Matrix4f();
 
@@ -358,7 +380,7 @@ public class GuiController {
         return (Stage) canvas.getScene().getWindow();
     }
 
-    // Методы для работы с переключением режимов и выбором модели (если будут использоваться позже)
+    // Методы для работы с переключением режимов и выбором модели
     private boolean modelMode = false;
 
     @FXML
@@ -383,6 +405,74 @@ public class GuiController {
         selectedModelIndex = (index + size) % size;
         selectedVertexIndex = -1;
         selectedPolygonIndex = -1;
+        showNotification("Selected model: " + sceneObjects.get(selectedModelIndex).getName(), "info");
     }
 
+    @FXML
+    private void toggleTheme() {
+        isDarkTheme = !isDarkTheme;
+
+        // Удаляем текущий класс темы
+        anchorPane.getStyleClass().remove("anchor-pane-dark");
+        anchorPane.getStyleClass().remove("anchor-pane-light");
+
+        // Добавляем новый класс темы
+        if (isDarkTheme) {
+            anchorPane.getStyleClass().add("anchor-pane-dark");
+            showNotification("Dark theme enabled", "info");
+        } else {
+            anchorPane.getStyleClass().add("anchor-pane-light");
+            showNotification("Light theme enabled", "info");
+        }
+    }
+
+    // ---------------------------------------------------------------
+    //                     Система уведомлений
+    // ---------------------------------------------------------------
+    private void showNotification(String message, String type) {
+        Label notification = new Label(message);
+        notification.getStyleClass().addAll("notification", type);
+        notification.setMaxWidth(250);
+        notification.setWrapText(true);
+
+        notificationContainer.getChildren().add(notification);
+        notificationContainer.setVisible(true);
+
+        // Автоудаление через 3 секунды
+        PauseTransition delay = new PauseTransition(Duration.seconds(3));
+        delay.setOnFinished(e -> {
+            notificationContainer.getChildren().remove(notification);
+            if (notificationContainer.getChildren().isEmpty()) {
+                notificationContainer.setVisible(false);
+            }
+        });
+        delay.play();
+    }
+
+    // ---------------------------------------------------------------
+    //                     Дополнительные методы
+    // ---------------------------------------------------------------
+    @FXML
+    private void clearAllModels() {
+        sceneObjects.clear();
+        selectedModelIndex = -1;
+        selectedVertexIndex = -1;
+        selectedPolygonIndex = -1;
+        showNotification("All models cleared", "info");
+    }
+
+    @FXML
+    private void showAbout() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("About");
+        alert.setHeaderText("3D Model Editor");
+        alert.setContentText("A simple 3D model editor for viewing and editing OBJ files.\n\n" +
+                "Features:\n" +
+                "• Load and save OBJ models\n" +
+                "• Vertex and polygon selection\n" +
+                "• Basic editing operations\n" +
+                "• Camera navigation\n" +
+                "• Dark/Light theme support");
+        alert.showAndWait();
+    }
 }
