@@ -1,7 +1,6 @@
 package com.cgvsu.render_engine;
 import com.cgvsu.math.Vector2f;
 import com.cgvsu.math.Vector3f;
-import com.cgvsu.math.Vector4f;
 import com.cgvsu.math.Matrix4f;
 
 public class GraphicConveyor {
@@ -20,17 +19,14 @@ public class GraphicConveyor {
     }
 
     public static Matrix4f lookAt(Vector3f eye, Vector3f target, Vector3f up) {
-        Vector3f resultX = new Vector3f();
-        Vector3f resultY = new Vector3f();
-        Vector3f resultZ = new Vector3f();
+        // Используем методы твоего Vector3f
+        Vector3f resultZ = target.subtract(eye);  // target - eye
+        Vector3f resultX = up.cross(resultZ);     // up × resultZ
+        Vector3f resultY = resultZ.cross(resultX); // resultZ × resultX
 
-        resultZ.sub(target, eye);
-        resultX.cross(up, resultZ);
-        resultY.cross(resultZ, resultX);
-
-        resultX.normalize();
-        resultY.normalize();
-        resultZ.normalize();
+        resultX = resultX.normalized();
+        resultY = resultY.normalized();
+        resultZ = resultZ.normalized();
 
         float[] matrix = new float[]{
                 resultX.x, resultY.x, resultZ.x, 0,
@@ -63,7 +59,7 @@ public class GraphicConveyor {
         return new Vector3f(x / w, y / w, z / w);
     }
 
-    public static Point2f vertexToPoint(final Vector3f vertex, final int width, final int height) {
-        return new Point2f(vertex.x * width + width / 2.0F, -vertex.y * height + height / 2.0F);
+    public static Vector2f vertexToPoint(final Vector3f vertex, final int width, final int height) {
+        return new Vector2f(vertex.x * width + width / 2.0F, -vertex.y * height + height / 2.0F);
     }
 }
