@@ -9,17 +9,18 @@ public class Matrix3f {
 
     public Matrix3f(float[][] values) {
         if (values.length != 3 || values[0].length != 3) {
-            throw new IllegalArgumentException("Matrix must be 3x3");
+            throw new IllegalArgumentException("Matrix must be 3f");
         }
         this.matrix = new float[3][3];
         for (int i = 0; i < 3; i++) {
             System.arraycopy(values[i], 0, this.matrix[i], 0, 3);
         }
+
     }
 
     public Matrix3f(float a11, float a12, float a13,
-                    float a21, float a22, float a23,
-                    float a31, float a32, float a33) {
+                     float a21, float a22, float a23,
+                     float a31, float a32, float a33) {
         this.matrix = new float[][]{
                 {a11, a12, a13},
                 {a21, a22, a23},
@@ -98,7 +99,7 @@ public class Matrix3f {
         return new Vector3f(x, y, z);
     }
 
-    // перемножение матриц
+    // умножение на матрицу
     public Matrix3f multiply(Matrix3f other) {
         float[][] result = new float[3][3];
         for (int i = 0; i < 3; i++) {

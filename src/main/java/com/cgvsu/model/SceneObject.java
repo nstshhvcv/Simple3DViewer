@@ -3,7 +3,7 @@ package com.cgvsu.model;
 import com.cgvsu.math.Vector3f;
 import com.cgvsu.render_engine.GraphicConveyor;
 
-import javax.vecmath.Matrix4f;
+import com.cgvsu.math.Matrix4f;
 import java.util.ArrayList;
 
 import static com.cgvsu.render_engine.GraphicConveyor.rotateScaleTranslate;
@@ -23,32 +23,30 @@ public class SceneObject {
         return model;
     }
 
-    public Matrix4f getTransform() {
-        return new Matrix4f(transform);
-    }
 
-    public void applyTranslation(javax.vecmath.Vector3f delta) {
-        Matrix4f translation = new Matrix4f();
-        translation.setIdentity();
-        translation.setTranslation(delta);
-        transform.mul(translation);
-    }
 
-    public void applyRotation(float angle, javax.vecmath.Vector3f axis) {
-        Matrix4f rotation = new Matrix4f();
-        rotation.setIdentity();
-        rotation.rotY(angle); // Пример для Y; можно добавить параметры для разных осей
-        transform.mul(rotation);
-    }
+//    public void applyTranslation(com.cgvsu.math.Vector3f delta) {
+//        Matrix4f translation = new Matrix4f();
+//        translation.setIdentity();
+//        translation.setTranslation(delta);
+//        transform.mul(translation);
+//    }
 
-    public void applyScale(javax.vecmath.Vector3f scale) {
-        Matrix4f scaling = new Matrix4f();
-        scaling.setIdentity();
-        scaling.m00 = scale.x;
-        scaling.m11 = scale.y;
-        scaling.m22 = scale.z;
-        transform.mul(scaling);
-    }
+//    public void applyRotation(float angle, com.cgvsu.math.Vector3f axis) {
+//        Matrix4f rotation = new Matrix4f();
+//        rotation.setIdentity();
+//        rotation.rotY(angle); // Пример для Y; можно добавить параметры для разных осей
+//        transform.mul(rotation);
+//    }
+
+//    public void applyScale(com.cgvsu.math.Vector3f scale) {
+//        Matrix4f scaling = new Matrix4f();
+//        scaling.setIdentity();
+//        scaling.m00 = scale.x;
+//        scaling.m11 = scale.y;
+//        scaling.m22 = scale.z;
+//        transform.mul(scaling);
+//    }
 
     public String getName() {
         return name;
@@ -60,7 +58,7 @@ public class SceneObject {
         // Трансформируем вершины
         for (com.cgvsu.math.Vector3f v : model.getVertices()) {
 
-            javax.vecmath.Vector3f tv = GraphicConveyor.multiplyMatrix4ByVector3(transform, v);
+            com.cgvsu.math.Vector3f tv = GraphicConveyor.multiplyMatrix4ByVector3(transform, v);
             transformed.addVertex(new com.cgvsu.math.Vector3f(tv.x, tv.y, tv.z));
         }
 
@@ -94,5 +92,29 @@ public class SceneObject {
         }
 
         return transformed;
+    }
+    public void applyTranslation(Vector3f delta) {
+        Matrix4f translation = new Matrix4f();
+        translation.setIdentity();
+        translation.setTranslation(delta);
+        transform.mul(translation); // Используем vecmath-style mul()
+    }
+
+    public void applyRotation(float angle, Vector3f axis) {
+        Matrix4f rotation = new Matrix4f();
+        rotation.setIdentity();
+        rotation.rotY(angle); // Или rotX/rotZ в зависимости от оси
+        transform.mul(rotation);
+    }
+
+    public void applyScale(Vector3f scale) {
+        Matrix4f scaling = new Matrix4f();
+        scaling.setIdentity();
+        scaling.setScale(scale);
+        transform.mul(scaling);
+    }
+
+    public Matrix4f getTransform() {
+        return new Matrix4f(transform); // Используем конструктор копирования
     }
 }

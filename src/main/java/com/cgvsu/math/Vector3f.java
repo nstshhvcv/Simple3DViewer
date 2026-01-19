@@ -3,7 +3,6 @@ package com.cgvsu.math;
 public class Vector3f {
     public float x, y, z;
 
-    // Конструкторы как в javax.vecmath
     public Vector3f() {
         this.x = 0.0f;
         this.y = 0.0f;
@@ -22,7 +21,58 @@ public class Vector3f {
         this.z = v.z;
     }
 
-    // Методы javax.vecmath (которые используются в коде)
+
+    public Vector3f addNew(Vector3f other) {
+        return new Vector3f(this.x + other.x, this.y + other.y, this.z + other.z);
+    }
+
+    public Vector3f subtract(Vector3f other) {
+        return new Vector3f(this.x - other.x, this.y - other.y, this.z - other.z);
+    }
+
+    public Vector3f multiply(float scalar) {
+        return new Vector3f(this.x * scalar, this.y * scalar, this.z * scalar);
+    }
+
+    public float length() {
+        return (float) Math.sqrt(x * x + y * y + z * z);
+    }
+
+    public Vector3f normalized() {
+        float len = length();
+        if (len == 0) return new Vector3f(0, 0, 0);
+        return new Vector3f(x / len, y / len, z / len);
+    }
+
+    public void normalize() {
+        float len = length();
+        if (len != 0.0f) {
+            this.x /= len;
+            this.y /= len;
+            this.z /= len;
+        }
+    }
+
+    // Скалярное произведение
+    public float dot(Vector3f v) {
+        return x * v.x + y * v.y + z * v.z;
+    }
+
+    // Векторное произведение
+    public Vector3f cross(Vector3f other) {
+        return new Vector3f(
+                y * other.z - z * other.y,
+                z * other.x - x * other.z,
+                x * other.y - y * other.x
+        );
+    }
+
+    public final void cross(Vector3f v1, Vector3f v2) {
+        this.x = v1.y * v2.z - v1.z * v2.y;
+        this.y = v1.z * v2.x - v1.x * v2.z;
+        this.z = v1.x * v2.y - v1.y * v2.x;
+    }
+
     public final void set(float x, float y, float z) {
         this.x = x;
         this.y = y;
@@ -35,44 +85,24 @@ public class Vector3f {
         this.z = v.z;
     }
 
-    // Этот add() изменяет текущий вектор (используется в Camera.movePosition())
-    public final void add(Vector3f v) {
+    public void add(Vector3f v) {
         this.x += v.x;
         this.y += v.y;
         this.z += v.z;
     }
 
-    // Этот sub используется в GraphicConveyor.lookAt()
     public final void sub(Vector3f v1, Vector3f v2) {
         this.x = v1.x - v2.x;
         this.y = v1.y - v2.y;
         this.z = v1.z - v2.z;
     }
 
-    // Этот cross используется в GraphicConveyor.lookAt()
-    public final void cross(Vector3f v1, Vector3f v2) {
-        float x = v1.y * v2.z - v1.z * v2.y;
-        float y = v1.z * v2.x - v1.x * v2.z;
-        float z = v1.x * v2.y - v1.y * v2.x;
-        this.x = x;
-        this.y = y;
-        this.z = z;
+    // Для отладки
+    @Override
+    public String toString() {
+        return String.format("(%.2f, %.2f, %.2f)", x, y, z);
     }
 
-    // Этот dot используется в GraphicConveyor.lookAt()
-    public final float dot(Vector3f v) {
-        return x * v.x + y * v.y + z * v.z;
-    }
-
-    // Этот normalize используется в GraphicConveyor.lookAt()
-    public final void normalize() {
-        float len = (float) Math.sqrt(x*x + y*y + z*z);
-        if (len != 0.0f) {
-            this.x /= len;
-            this.y /= len;
-            this.z /= len;
-        }
-    }
     public float getX() {
         return x;
     }
@@ -83,26 +113,5 @@ public class Vector3f {
 
     public float getZ() {
         return z;
-    }
-
-    // Можно добавить и сеттеры для полноты
-    public void setX(float x) {
-        this.x = x;
-    }
-
-    public void setY(float y) {
-        this.y = y;
-    }
-
-    public void setZ(float z) {
-        this.z = z;
-    }
-
-    // equals для тестов
-    public boolean equals(Vector3f other) {
-        final float eps = 1e-7f;
-        return Math.abs(x - other.x) < eps &&
-                Math.abs(y - other.y) < eps &&
-                Math.abs(z - other.z) < eps;
     }
 }
