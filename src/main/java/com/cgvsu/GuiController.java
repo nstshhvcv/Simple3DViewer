@@ -31,8 +31,7 @@ import javafx.util.Duration;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class GuiController {
 
@@ -43,27 +42,52 @@ public class GuiController {
     @FXML private AnchorPane anchorPane;
     @FXML private Canvas canvas;
     @FXML private VBox notificationContainer;
+    @FXML private VBox transformPanel;
+    @FXML private TextField scaleX, scaleY, scaleZ;
+    @FXML private TextField rotateX, rotateY, rotateZ;
+    @FXML private TextField translateX, translateY, translateZ;
+    @FXML private CheckBox randomTransformationCheck;
 
     private final List<SceneObject> sceneObjects = new ArrayList<>();
     private int selectedModelIndex = -1;
     private Camera camera;
-
     private Timeline timeline;
     private boolean isDarkTheme = true;
 
+    // Режимы редактирования
     private enum EditMode { NONE, VERTEX, POLYGON }
     private EditMode editMode = EditMode.NONE;
     private int selectedVertexIndex = -1;
     private int selectedPolygonIndex = -1;
 
+    // Хранит оригинальные модели для возможности отката изменений
+    private final Map<SceneObject, Model> originalModels = new HashMap<>();
+
+    // Режим отображения: true - трансформированные модели, false - оригинальные
+    private boolean modelMode = false;
+
     @FXML
     private void initialize() {
         // Инициализация камеры
-        camera = new Camera(new Vector3f(0, 0, 40), new Vector3f(0, 0, 0), 60.0F, 1.0F, 0.1F, 1000.0F);
+        camera = new Camera(
+                new Vector3f(0, 0, 40),
+                new Vector3f(0, 0, 0),
+                60.0F,
+                1.0F,
+                0.1F,
+                100.0F
+        );
 
         // Адаптация канваса под размер окна
-        anchorPane.widthProperty().addListener((ov, old, nv) -> canvas.setWidth(nv.doubleValue()));
-        anchorPane.heightProperty().addListener((ov, old, nv) -> canvas.setHeight(nv.doubleValue()));
+        anchorPane.widthProperty().addListener((ov, old, nv) -> {
+            canvas.setWidth(nv.doubleValue());
+            updateCameraAspectRatio();
+        });
+
+        anchorPane.heightProperty().addListener((ov, old, nv) -> {
+            canvas.setHeight(nv.doubleValue());
+            updateCameraAspectRatio();
+        });
 
         // Основной цикл рендера ~60 fps
         timeline = new Timeline();
@@ -72,7 +96,6 @@ public class GuiController {
             double w = canvas.getWidth();
             double h = canvas.getHeight();
             canvas.getGraphicsContext2D().clearRect(0, 0, w, h);
-            camera.setAspectRatio((float) (w / h));
             RenderEngine.render(
                     canvas.getGraphicsContext2D(),
                     camera,
@@ -89,6 +112,13 @@ public class GuiController {
         // Выбор вершин/полигонов по клику
         canvas.setOnMouseClicked(this::handleMouseClick);
         notificationContainer.setVisible(false);
+    }
+
+    // Метод для обновления aspect ratio камеры
+    private void updateCameraAspectRatio() {
+        if (canvas.getHeight() > 0) {
+            camera.setAspectRatio((float) (canvas.getWidth() / canvas.getHeight()));
+        }
     }
 
     // ---------------------------------------------------------------
@@ -254,28 +284,6 @@ public class GuiController {
         }
     }
 
-    @FXML private void onSaveModelMenuItemClick() {
-        if (selectedModelIndex < 0) {
-            showError("Нет выбранной модели", "Выберите модель для сохранения");
-            return;
-        }
-
-        FileChooser fc = new FileChooser();
-        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("OBJ (*.obj)", "*.obj"));
-        fc.setInitialFileName("model.obj");
-        File file = fc.showSaveDialog(getStage());
-        if (file == null) return;
-
-        try {
-            SceneObject so = sceneObjects.get(selectedModelIndex);
-            Model toSave = so.getModel();
-            ObjWriter.write(toSave, file.getAbsolutePath());
-            showNotification("Model saved: " + file.getName(), "success");
-        } catch (Exception e) {
-            showError("Ошибка сохранения", e.getMessage());
-        }
-    }
-
     // ---------------------------------------------------------------
     //                     Камера (из меню Camera Options)
     // ---------------------------------------------------------------
@@ -321,10 +329,8 @@ public class GuiController {
         Matrix4f viewMatrix = camera.getViewMatrix();
         Matrix4f projMatrix = camera.getProjectionMatrix();
 
-        Matrix4f mvp = new Matrix4f(modelMatrix);
-        mvp.mul(viewMatrix);
-        mvp.mul(projMatrix);
-        return mvp;
+        // Порядок умножения матриц: projection * view * model
+        return projMatrix.multiply(viewMatrix).multiply(modelMatrix);
     }
 
     private Matrix4f getMVPForSelectedModel() {
@@ -404,6 +410,7 @@ public class GuiController {
     // ---------------------------------------------------------------
     @FXML private void clearAllModels() {
         sceneObjects.clear();
+        originalModels.clear();
         selectedModelIndex = -1;
         selectedVertexIndex = -1;
         selectedPolygonIndex = -1;
@@ -423,34 +430,189 @@ public class GuiController {
                 "• Dark/Light theme support");
         alert.showAndWait();
     }
-    /**
-     * Переключает режим редактирования между:
-     * - NONE (выбор объектов)
-     * - VERTEX (выбор вершин)
-     * - POLYGON (выбор полигонов)
-     */
+
+    // ---------------------------------------------------------------
+    //                     Трансформация модели
+    // ---------------------------------------------------------------
+
+    // Показать панель трансформации
     @FXML
-    public void toggleMode() {
-        switch (editMode) {
-            case NONE:
-                editMode = EditMode.VERTEX;
-                selectedVertexIndex = -1;
-                selectedPolygonIndex = -1;
-                showNotification("Vertex selection mode activated", "info");
-                break;
-            case VERTEX:
-                editMode = EditMode.POLYGON;
-                selectedVertexIndex = -1;
-                selectedPolygonIndex = -1;
-                showNotification("Polygon selection mode activated", "info");
-                break;
-            case POLYGON:
-                editMode = EditMode.NONE;
-                selectedVertexIndex = -1;
-                selectedPolygonIndex = -1;
-                showNotification("Object selection mode activated", "info");
-                break;
+    private void onShowTransformPanel() {
+        if (selectedModelIndex < 0) {
+            showNotification("No model selected", "error");
+            return;
+        }
+
+        transformPanel.setVisible(true);
+        transformPanel.setManaged(true);
+
+        // Устанавливаем значения по умолчанию
+        scaleX.setText("1.0");
+        scaleY.setText("1.0");
+        scaleZ.setText("1.0");
+        rotateX.setText("0.0");
+        rotateY.setText("0.0");
+        rotateZ.setText("0.0");
+        translateX.setText("0.0");
+        translateY.setText("0.0");
+        translateZ.setText("0.0");
+
+        // Сохраняем оригинальную модель при первом открытии панели
+        if (!originalModels.containsKey(sceneObjects.get(selectedModelIndex))) {
+            Model originalModel = sceneObjects.get(selectedModelIndex).getModel().clone();
+            originalModels.put(sceneObjects.get(selectedModelIndex), originalModel);
         }
     }
 
+    // Применение трансформации
+    @FXML
+    private void onApplyTransformation() {
+        if (selectedModelIndex < 0) {
+            showNotification("No model selected", "error");
+            return;
+        }
+
+        try {
+            float sx = Float.parseFloat(scaleX.getText());
+            float sy = Float.parseFloat(scaleY.getText());
+            float sz = Float.parseFloat(scaleZ.getText());
+
+            float rx = Float.parseFloat(rotateX.getText());
+            float ry = Float.parseFloat(rotateY.getText());
+            float rz = Float.parseFloat(rotateZ.getText());
+
+            float tx = Float.parseFloat(translateX.getText());
+            float ty = Float.parseFloat(translateY.getText());
+            float tz = Float.parseFloat(translateZ.getText());
+
+            // Получаем текущую матрицу трансформации объекта
+            SceneObject selectedObject = sceneObjects.get(selectedModelIndex);
+            Matrix4f currentTransform = selectedObject.getTransform();
+
+            // Создаем матрицы для каждого типа трансформации
+            Matrix4f scaleMatrix = AffineTransformation.scale(sx, sy, sz);
+            Matrix4f rotateXMatrix = AffineTransformation.rotationX((float) Math.toRadians(rx));
+            Matrix4f rotateYMatrix = AffineTransformation.rotationY((float) Math.toRadians(ry));
+            Matrix4f rotateZMatrix = AffineTransformation.rotationZ((float) Math.toRadians(rz));
+            Matrix4f translateMatrix = AffineTransformation.translation(tx, ty, tz);
+
+            // Комбинируем матрицы в правильном порядке: масштаб -> вращение -> перенос
+            Matrix4f rotationMatrix = rotateZMatrix.multiply(rotateYMatrix).multiply(rotateXMatrix);
+            Matrix4f transformMatrix = translateMatrix.multiply(rotationMatrix).multiply(scaleMatrix);
+
+            // Применяем трансформацию к объекту
+            selectedObject.setTransform(transformMatrix.multiply(currentTransform));
+
+            showNotification("Transformation applied", "success");
+        } catch (NumberFormatException e) {
+            showNotification("Invalid input format", "error");
+        }
+    }
+
+    // Откат трансформации
+    @FXML
+    private void onOriginalModel() {
+        if (selectedModelIndex < 0) {
+            showNotification("No model selected", "error");
+            return;
+        }
+
+        if (originalModels.containsKey(sceneObjects.get(selectedModelIndex))) {
+            Model originalModel = originalModels.get(sceneObjects.get(selectedModelIndex));
+            sceneObjects.get(selectedModelIndex).setModel(originalModel.clone());
+            sceneObjects.get(selectedModelIndex).setTransform(Matrix4f.identity());
+            showNotification("Transformation undone", "success");
+        } else {
+            showNotification("No original model saved", "error");
+        }
+    }
+
+    // Сохранение оригинальной модели
+    @FXML
+    private void onSaveOriginalModelMenuItemClick() {
+        if (selectedModelIndex < 0) {
+            showNotification("No model selected", "error");
+            return;
+        }
+
+        FileChooser fc = new FileChooser();
+        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("OBJ (*.obj)", "*.obj"));
+        fc.setInitialFileName("original_model.obj");
+        File file = fc.showSaveDialog(getStage());
+        if (file == null) return;
+
+        try {
+            Model modelToSave = originalModels.getOrDefault(
+                    sceneObjects.get(selectedModelIndex),
+                    sceneObjects.get(selectedModelIndex).getModel()
+            );
+            ObjWriter.write(modelToSave, file.getAbsolutePath());
+            showNotification("Original model saved: " + file.getName(), "success");
+        } catch (Exception e) {
+            showError("Ошибка сохранения", e.getMessage());
+        }
+    }
+
+    // Сохранение трансформированной модели
+    @FXML
+    private void onSaveTransformedModelMenuItemClick() {
+        if (selectedModelIndex < 0) {
+            showNotification("No model selected", "error");
+            return;
+        }
+
+        FileChooser fc = new FileChooser();
+        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("OBJ (*.obj)", "*.obj"));
+        fc.setInitialFileName("transformed_model.obj");
+        File file = fc.showSaveDialog(getStage());
+        if (file == null) return;
+
+        try {
+            Model modelToSave = sceneObjects.get(selectedModelIndex).getModel();
+            ObjWriter.write(modelToSave, file.getAbsolutePath());
+            showNotification("Transformed model saved: " + file.getName(), "success");
+        } catch (Exception e) {
+            showError("Ошибка сохранения", e.getMessage());
+        }
+    }
+
+    // Скрыть панель трансформации
+    @FXML
+    private void onHideTransformPanel() {
+        transformPanel.setVisible(false);
+        transformPanel.setManaged(false);
+    }
+
+    // Удаление выбранной модели
+    @FXML
+    private void onRemoveModelClick() {
+        if (selectedModelIndex < 0) {
+            showNotification("No model selected", "error");
+            return;
+        }
+
+        sceneObjects.remove(selectedModelIndex);
+        originalModels.remove(selectedModelIndex);
+
+        if (sceneObjects.isEmpty()) {
+            selectedModelIndex = -1;
+        } else {
+            selectedModelIndex = Math.max(0, selectedModelIndex - 1);
+        }
+
+        showNotification("Model removed", "success");
+    }
+
+    // ---------------------------------------------------------------
+    //                     Переключение режима отображения
+    // ---------------------------------------------------------------
+    @FXML
+    public void toggleMode() {
+        modelMode = !modelMode;
+        if (modelMode) {
+            showNotification("Displaying transformed models", "info");
+        } else {
+            showNotification("Displaying original models", "info");
+        }
+    }
 }
