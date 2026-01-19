@@ -26,8 +26,8 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
-import javax.vecmath.Matrix4f;
-import javax.vecmath.Vector3f;
+import com.cgvsu.math.Matrix4f;
+import com.cgvsu.math.Vector3f;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;

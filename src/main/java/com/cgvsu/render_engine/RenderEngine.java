@@ -1,5 +1,6 @@
 package com.cgvsu.render_engine;
 
+import com.cgvsu.math.Matrix4f;
 import com.cgvsu.math.Vector2f;
 import com.cgvsu.math.Vector3f;
 import com.cgvsu.model.Model;
@@ -8,7 +9,7 @@ import com.cgvsu.model.SceneObject;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
-import javax.vecmath.Matrix4f;
+import com.cgvsu.math.Matrix4f;
 import java.util.ArrayList;
 import java.util.List;
 
