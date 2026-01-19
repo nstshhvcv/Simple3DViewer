@@ -6,9 +6,9 @@ import java.util.List;
 
 public class Polygon {
 
-    private final ArrayList<Integer> vertexIndices = new ArrayList<>();
-    private final ArrayList<Integer> textureVertexIndices = new ArrayList<>();
-    private final ArrayList<Integer> normalIndices = new ArrayList<>();
+    private List<Integer> vertexIndices = new ArrayList<>();
+    private List<Integer> textureVertexIndices = new ArrayList<>();
+    private List<Integer> normalIndices = new ArrayList<>();
 
     // Добавление одной вершины (самый удобный способ при парсинге)
     public void addVertex(int vertexIndex) {
@@ -85,4 +85,18 @@ public class Polygon {
                 ", normals=" + (hasNormals() ? normalIndices : "[]") +
                 '}';
     }
+    public Polygon copy(){
+        return new Polygon(getVertexIndices(), getTextureVertexIndices(), getNormalIndices());
+    }
+    private Polygon(List<Integer> vertexIndices, List<Integer> textureVertexIndices, List<Integer> normalIndices){
+        this.vertexIndices = vertexIndices;
+        this.textureVertexIndices = textureVertexIndices;
+        this.normalIndices = normalIndices;
+    }
+    public Polygon(){
+        vertexIndices = new ArrayList<>();
+        textureVertexIndices = new ArrayList<>();
+        normalIndices = new ArrayList<>();
+    }
+
 }

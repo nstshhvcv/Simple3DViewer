@@ -1,5 +1,6 @@
 package com.cgvsu.model;
 
+import com.cgvsu.math.Matrix4f;
 import com.cgvsu.math.Vector2f;
 import com.cgvsu.math.Vector3f;
 
@@ -8,11 +9,15 @@ import java.util.Collections;
 import java.util.List;
 
 public class Model {
-
     private final ArrayList<Vector3f> vertices = new ArrayList<>();
     private final ArrayList<Vector2f> textureVertices = new ArrayList<>();
     private final ArrayList<Vector3f> normals = new ArrayList<>();
     private final ArrayList<Polygon> polygons = new ArrayList<>();
+    private Matrix4f modelMatrix = Matrix4f.identity();
+
+    public void setModelMatrix(Matrix4f matrix) {
+        this.modelMatrix = matrix;
+    }
 
     public void addVertex(Vector3f vertex) {
         vertices.add(vertex);
@@ -30,7 +35,6 @@ public class Model {
         polygons.add(polygon);
     }
 
-    // Безопасные геттеры (чтобы никто случайно не модифицировал коллекции извне)
     public List<Vector3f> getVertices() {
         return Collections.unmodifiableList(vertices);
     }
@@ -47,25 +51,19 @@ public class Model {
         return Collections.unmodifiableList(polygons);
     }
 
-    // Удаление вершины
     public void removeVertex(int index) {
         if (index < 0 || index >= vertices.size()) {
             throw new IllegalArgumentException("Invalid vertex index: " + index);
         }
         vertices.remove(index);
 
-        // Удаляем полигоны, использующие эту вершину
         polygons.removeIf(p -> p.getVertexIndices().contains(index));
 
-        // Сдвигаем индексы в оставшихся полигонах
         for (Polygon p : polygons) {
             p.decrementVertexIndicesGreaterThan(index);
         }
-
-        // Для текстур и нормалей — опционально, если удаляем вершину, но индексы отдельные
     }
 
-    // Удаление полигона
     public void removePolygon(int index) {
         if (index < 0 || index >= polygons.size()) {
             throw new IllegalArgumentException("Invalid polygon index: " + index);
@@ -73,7 +71,26 @@ public class Model {
         polygons.remove(index);
     }
 
-    // Для отладки удобно
+    public Matrix4f getModelMatrix() {
+        return modelMatrix;
+    }
+
+    // Метод для клонирования модели
+    public Model clone() {
+        Model clonedModel = new Model();
+        clonedModel.vertices.addAll(this.vertices);
+        clonedModel.textureVertices.addAll(this.textureVertices);
+        clonedModel.normals.addAll(this.normals);
+
+        // Клонируем полигоны
+        for (Polygon polygon : this.polygons) {
+            clonedModel.polygons.add(polygon.copy());
+        }
+
+        clonedModel.modelMatrix = new Matrix4f(this.modelMatrix);
+        return clonedModel;
+    }
+
     @Override
     public String toString() {
         return "Model{" +
@@ -83,5 +100,4 @@ public class Model {
                 ", polygons=" + polygons.size() +
                 '}';
     }
-
 }

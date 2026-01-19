@@ -1,16 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<?import javafx.scene.control.MenuBar?>
-<?import javafx.scene.control.Menu?>
-<?import javafx.scene.control.MenuItem?>
-<?import javafx.scene.input.KeyCodeCombination?>
-<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 <?import javafx.scene.canvas.Canvas?>
-<?import javafx.scene.layout.VBox?>
-<?import java.net.URL?>
-
+<?import javafx.scene.input.KeyCodeCombination?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.image.Image?>
+<?import java.net.URL?>
+
 <AnchorPane fx:id="anchorPane" xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.cgvsu.GuiController"
             styleClass="anchor-pane-dark">
@@ -31,15 +27,14 @@
                     <KeyCodeCombination alt="UP" control="DOWN" meta="UP" shift="UP" shortcut="UP" code="O"/>
                 </accelerator>
             </MenuItem>
-            <MenuItem mnemonicParsing="false" onAction="#onSaveModelMenuItemClick" text="Save Model">
-
-                <graphic>
-                    <ImageView fitWidth="20" fitHeight="20">
-                        <Image url="@icons/icons8-save-as-24.png"/>
-                    </ImageView>
-                </graphic>
+            <MenuItem mnemonicParsing="false" onAction="#onSaveOriginalModelMenuItemClick" text="Save Original Model">
                 <accelerator>
                     <KeyCodeCombination alt="UP" control="DOWN" meta="UP" shift="UP" shortcut="UP" code="S"/>
+                </accelerator>
+            </MenuItem>
+            <MenuItem mnemonicParsing="false" onAction="#onSaveTransformedModelMenuItemClick" text="Save Transformed Model">
+                <accelerator>
+                    <KeyCodeCombination alt="UP" control="DOWN" meta="UP" shift="UP" shortcut="UP" code="A"/>
                 </accelerator>
             </MenuItem>
             <MenuItem mnemonicParsing="false" text="Clear All" onAction="#clearAllModels">
@@ -47,6 +42,9 @@
                     <KeyCodeCombination alt="UP" control="DOWN" meta="UP" shift="UP" shortcut="UP" code="DELETE"/>
                 </accelerator>
             </MenuItem>
+        </Menu>
+        <Menu mnemonicParsing="false" text="Model Operations">
+            <MenuItem mnemonicParsing="false" onAction="#onShowTransformPanel" text="Show Transform Panel"/>
         </Menu>
         <Menu mnemonicParsing="false" text="Camera Options">
             <MenuItem mnemonicParsing="false" onAction="#handleCameraForward" text="Forward">
@@ -103,11 +101,73 @@
     <Canvas fx:id="canvas" width="1600" height="870" AnchorPane.topAnchor="30.0"
             styleClass="canvas-3d"/>
 
+    <!-- Панель трансформации -->
+    <VBox fx:id="transformPanel" visible="false" managed="false"
+          AnchorPane.rightAnchor="20.0" AnchorPane.topAnchor="50.0"
+          spacing="10" styleClass="transform-panel">
+
+        <Label text="Transform Model" styleClass="panel-title"/>
+
+        <VBox spacing="5">
+            <Label text="Scale"/>
+            <HBox spacing="5">
+                <Label text="X:" prefWidth="30"/>
+                <TextField fx:id="scaleX" text="1.0" prefWidth="70"/>
+            </HBox>
+            <HBox spacing="5">
+                <Label text="Y:" prefWidth="30"/>
+                <TextField fx:id="scaleY" text="1.0" prefWidth="70"/>
+            </HBox>
+            <HBox spacing="5">
+                <Label text="Z:" prefWidth="30"/>
+                <TextField fx:id="scaleZ" text="1.0" prefWidth="70"/>
+            </HBox>
+        </VBox>
+
+        <VBox spacing="5">
+            <Label text="Rotate (degrees)"/>
+            <HBox spacing="5">
+                <Label text="X:" prefWidth="30"/>
+                <TextField fx:id="rotateX" text="0.0" prefWidth="70"/>
+            </HBox>
+            <HBox spacing="5">
+                <Label text="Y:" prefWidth="30"/>
+                <TextField fx:id="rotateY" text="0.0" prefWidth="70"/>
+            </HBox>
+            <HBox spacing="5">
+                <Label text="Z:" prefWidth="30"/>
+                <TextField fx:id="rotateZ" text="0.0" prefWidth="70"/>
+            </HBox>
+        </VBox>
+
+        <VBox spacing="5">
+            <Label text="Translate"/>
+            <HBox spacing="5">
+                <Label text="X:" prefWidth="30"/>
+                <TextField fx:id="translateX" text="0.0" prefWidth="70"/>
+            </HBox>
+            <HBox spacing="5">
+                <Label text="Y:" prefWidth="30"/>
+                <TextField fx:id="translateY" text="0.0" prefWidth="70"/>
+            </HBox>
+            <HBox spacing="5">
+                <Label text="Z:" prefWidth="30"/>
+                <TextField fx:id="translateZ" text="0.0" prefWidth="70"/>
+            </HBox>
+        </VBox>
+
+        <Button text="Apply transformation" onAction="#onApplyTransformation" prefWidth="280"/>
+        <Button text="Undo the transformation" onAction="#onOriginalModel" prefWidth="280"/>
+        <Button text="Delete Selected Model"
+                onAction="#onRemoveModelClick"
+                prefWidth="280"
+                styleClass="delete-button"/>
+    </VBox>
+
     <!-- Контейнер для уведомлений -->
     <VBox fx:id="notificationContainer"
           AnchorPane.topAnchor="40.0"
           AnchorPane.rightAnchor="20.0"
           spacing="5"
           visible="false"/>
-
 </AnchorPane>
