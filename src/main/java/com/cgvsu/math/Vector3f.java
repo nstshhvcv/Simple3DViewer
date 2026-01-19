@@ -21,6 +21,58 @@ public class Vector3f {
         this.z = v.z;
     }
 
+
+    public Vector3f addNew(Vector3f other) {
+        return new Vector3f(this.x + other.x, this.y + other.y, this.z + other.z);
+    }
+
+    public Vector3f subtract(Vector3f other) {
+        return new Vector3f(this.x - other.x, this.y - other.y, this.z - other.z);
+    }
+
+    public Vector3f multiply(float scalar) {
+        return new Vector3f(this.x * scalar, this.y * scalar, this.z * scalar);
+    }
+
+    public float length() {
+        return (float) Math.sqrt(x * x + y * y + z * z);
+    }
+
+    public Vector3f normalized() {
+        float len = length();
+        if (len == 0) return new Vector3f(0, 0, 0);
+        return new Vector3f(x / len, y / len, z / len);
+    }
+
+    public void normalize() {
+        float len = length();
+        if (len != 0.0f) {
+            this.x /= len;
+            this.y /= len;
+            this.z /= len;
+        }
+    }
+
+    // Скалярное произведение
+    public float dot(Vector3f v) {
+        return x * v.x + y * v.y + z * v.z;
+    }
+
+    // Векторное произведение
+    public Vector3f cross(Vector3f other) {
+        return new Vector3f(
+                y * other.z - z * other.y,
+                z * other.x - x * other.z,
+                x * other.y - y * other.x
+        );
+    }
+
+    public final void cross(Vector3f v1, Vector3f v2) {
+        this.x = v1.y * v2.z - v1.z * v2.y;
+        this.y = v1.z * v2.x - v1.x * v2.z;
+        this.z = v1.x * v2.y - v1.y * v2.x;
+    }
+
     public final void set(float x, float y, float z) {
         this.x = x;
         this.y = y;
@@ -33,7 +85,7 @@ public class Vector3f {
         this.z = v.z;
     }
 
-    public final void add(Vector3f v) {
+    public void add(Vector3f v) {
         this.x += v.x;
         this.y += v.y;
         this.z += v.z;
@@ -45,61 +97,21 @@ public class Vector3f {
         this.z = v1.z - v2.z;
     }
 
-    public final void cross(Vector3f v1, Vector3f v2) {
-        float x = v1.y * v2.z - v1.z * v2.y;
-        float y = v1.z * v2.x - v1.x * v2.z;
-        float z = v1.x * v2.y - v1.y * v2.x;
-        this.x = x;
-        this.y = y;
-        this.z = z;
+    // Для отладки
+    @Override
+    public String toString() {
+        return String.format("(%.2f, %.2f, %.2f)", x, y, z);
     }
 
-    // ДОБАВЬ этот метод (возвращает новый вектор)
-    public Vector3f cross(Vector3f other) {
-        return new Vector3f(
-                this.y * other.z - this.z * other.y,
-                this.z * other.x - this.x * other.z,
-                this.x * other.y - this.y * other.x
-        );
+    public float getX() {
+        return x;
     }
 
-    public final float dot(Vector3f v) {
-        return x * v.x + y * v.y + z * v.z;
+    public float getY() {
+        return y;
     }
 
-    public final void normalize() {
-        float len = (float) Math.sqrt(x*x + y*y + z*z);
-        if (len != 0.0f) {
-            this.x /= len;
-            this.y /= len;
-            this.z /= len;
-        }
-    }
-
-    // Геттеры
-    public float getX() { return x; }
-    public float getY() { return y; }
-    public float getZ() { return z; }
-
-    // Для совместимости
-    public Vector3f addNew(Vector3f other) {
-        return new Vector3f(x + other.x, y + other.y, z + other.z);
-    }
-
-    public Vector3f subtract(Vector3f other) {
-        return new Vector3f(x - other.x, y - other.y, z - other.z);
-    }
-
-    public Vector3f normalized() {
-        float len = (float) Math.sqrt(x*x + y*y + z*z);
-        if (len == 0) return new Vector3f(0, 0, 0);
-        return new Vector3f(x / len, y / len, z / len);
-    }
-
-    public boolean equals(Vector3f other) {
-        final float eps = 1e-7f;
-        return Math.abs(x - other.x) < eps &&
-                Math.abs(y - other.y) < eps &&
-                Math.abs(z - other.z) < eps;
+    public float getZ() {
+        return z;
     }
 }

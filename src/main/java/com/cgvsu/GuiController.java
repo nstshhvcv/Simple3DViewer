@@ -1,5 +1,8 @@
 package com.cgvsu;
 
+import com.cgvsu.math.Matrix4f;
+import com.cgvsu.math.Vector2f;
+import com.cgvsu.math.Vector3f;
 import com.cgvsu.model.Model;
 import com.cgvsu.model.Polygon;
 import com.cgvsu.model.SceneObject;
@@ -9,7 +12,6 @@ import com.cgvsu.objwriter.ObjWriter;
 import com.cgvsu.render_engine.Camera;
 import com.cgvsu.render_engine.GraphicConveyor;
 import com.cgvsu.render_engine.RenderEngine;
-import com.cgvsu.math.Vector2f;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.PauseTransition;
@@ -26,8 +28,6 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
-import com.cgvsu.math.Matrix4f;
-import com.cgvsu.math.Vector3f;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -36,8 +36,8 @@ import java.util.List;
 
 public class GuiController {
 
-    private float TRANSLATION = 0.5f;
-    private float ROTATION_ANGLE = (float) Math.toRadians(5);
+    private static final float TRANSLATION_STEP = 0.5f;
+    private static final float ROTATION_ANGLE = (float) Math.toRadians(5);
     private static final float SCALE_FACTOR = 1.1f;
 
     @FXML private AnchorPane anchorPane;
@@ -46,24 +46,21 @@ public class GuiController {
 
     private final List<SceneObject> sceneObjects = new ArrayList<>();
     private int selectedModelIndex = -1;
-
-    private Camera camera = new Camera(
-            new Vector3f(0, 0, 100),
-            new Vector3f(0, 0, 0),
-            1.0F, 1, 0.01F, 100);
+    private Camera camera;
 
     private Timeline timeline;
     private boolean isDarkTheme = true;
 
-    // Режимы редактирования
     private enum EditMode { NONE, VERTEX, POLYGON }
     private EditMode editMode = EditMode.NONE;
-
     private int selectedVertexIndex = -1;
     private int selectedPolygonIndex = -1;
 
     @FXML
     private void initialize() {
+        // Инициализация камеры
+        camera = new Camera(new Vector3f(0, 0, 40), new Vector3f(0, 0, 0), 60.0F, 1.0F, 0.1F, 1000.0F);
+
         // Адаптация канваса под размер окна
         anchorPane.widthProperty().addListener((ov, old, nv) -> canvas.setWidth(nv.doubleValue()));
         anchorPane.heightProperty().addListener((ov, old, nv) -> canvas.setHeight(nv.doubleValue()));
@@ -74,10 +71,8 @@ public class GuiController {
         KeyFrame frame = new KeyFrame(Duration.millis(16), e -> {
             double w = canvas.getWidth();
             double h = canvas.getHeight();
-
             canvas.getGraphicsContext2D().clearRect(0, 0, w, h);
             camera.setAspectRatio((float) (w / h));
-
             RenderEngine.render(
                     canvas.getGraphicsContext2D(),
                     camera,
@@ -93,8 +88,6 @@ public class GuiController {
 
         // Выбор вершин/полигонов по клику
         canvas.setOnMouseClicked(this::handleMouseClick);
-
-        // Инициализация уведомлений
         notificationContainer.setVisible(false);
     }
 
@@ -109,25 +102,19 @@ public class GuiController {
 
         // Шаг 1: Пытаемся выбрать модель по клику
         int clickedModelIndex = findClosestModel(mx, my, w, h);
-
         if (clickedModelIndex >= 0) {
-            // Выбираем новую модель
             selectedModelIndex = clickedModelIndex;
-            // Сбрасываем внутреннее выделение
             selectedVertexIndex = -1;
             selectedPolygonIndex = -1;
 
-            // Если режим редактирования включён — пробуем выбрать вершину/полигон внутри модели
             if (editMode != EditMode.NONE) {
                 Model model = sceneObjects.get(selectedModelIndex).getModel();
                 Matrix4f mvp = getMVPForSelectedModel();
 
                 if (editMode == EditMode.VERTEX) {
                     selectedVertexIndex = findClosestVertex(model, mvp, mx, my, w, h);
-                    selectedPolygonIndex = -1;
                 } else if (editMode == EditMode.POLYGON) {
                     selectedPolygonIndex = findClosestPolygon(model, mvp, mx, my, w, h);
-                    selectedVertexIndex = -1;
                 }
             }
             showNotification("Selected model: " + sceneObjects.get(selectedModelIndex).getName(), "info");
@@ -144,35 +131,29 @@ public class GuiController {
             Matrix4f mvp = getMVPForModel(i);
 
             double modelMinDist = Double.MAX_VALUE;
-
-            // Ищем минимальное расстояние до любой вершины модели
-            for (com.cgvsu.math.Vector3f vert : model.getVertices()) {
+            for (Vector3f vert : model.getVertices()) {
                 Vector2f p = GraphicConveyor.vertexToPoint(
-                        GraphicConveyor.multiplyMatrix4ByVector3(mvp, vert), w, h);
-
+                        GraphicConveyor.multiplyMatrix4ByVector3(mvp, vert), w, h
+                );
                 double dist = Math.hypot(p.x - mx, p.y - my);
                 if (dist < modelMinDist) modelMinDist = dist;
             }
-
             if (modelMinDist < globalMinDist) {
                 globalMinDist = modelMinDist;
                 bestIndex = i;
             }
         }
-
         return (globalMinDist < 120) ? bestIndex : -1;
     }
 
     private int findClosestVertex(Model model, Matrix4f mvp, double mx, double my, int w, int h) {
         double minDist = 12.0;
         int best = -1;
-
         for (int i = 0; i < model.getVertices().size(); i++) {
-            com.cgvsu.math.Vector3f v = model.getVertices().get(i);
-
+            Vector3f v = model.getVertices().get(i);
             Vector2f p = GraphicConveyor.vertexToPoint(
-                    GraphicConveyor.multiplyMatrix4ByVector3(mvp, v), w, h);
-
+                    GraphicConveyor.multiplyMatrix4ByVector3(mvp, v), w, h
+            );
             double dist = Math.hypot(p.x - mx, p.y - my);
             if (dist < minDist) {
                 minDist = dist;
@@ -182,43 +163,25 @@ public class GuiController {
         return best;
     }
 
-    private Matrix4f getMVPForModel(int modelIndex) {
-        if (modelIndex < 0 || modelIndex >= sceneObjects.size()) return new Matrix4f();
-
-        SceneObject so = sceneObjects.get(modelIndex);
-        Matrix4f modelMatrix = so.getTransform();
-        Matrix4f viewMatrix = camera.getViewMatrix();
-        Matrix4f projMatrix = camera.getProjectionMatrix();
-
-        Matrix4f mvp = new Matrix4f(modelMatrix);
-        mvp.mul(viewMatrix);
-        mvp.mul(projMatrix);
-        return mvp;
-    }
-
     private int findClosestPolygon(Model model, Matrix4f mvp, double mx, double my, int w, int h) {
         double minDist = 40.0;
         int best = -1;
-
         for (int i = 0; i < model.getPolygons().size(); i++) {
             Polygon poly = model.getPolygons().get(i);
             double cx = 0, cy = 0;
             int count = 0;
-
             for (int idx : poly.getVertexIndices()) {
-                com.cgvsu.math.Vector3f v = model.getVertices().get(idx);
-
+                Vector3f v = model.getVertices().get(idx);
                 Vector2f p = GraphicConveyor.vertexToPoint(
-                        GraphicConveyor.multiplyMatrix4ByVector3(mvp, v), w, h);
+                        GraphicConveyor.multiplyMatrix4ByVector3(mvp, v), w, h
+                );
                 cx += p.x;
                 cy += p.y;
                 count++;
             }
-
             if (count == 0) continue;
             cx /= count;
             cy /= count;
-
             double dist = Math.hypot(cx - mx, cy - my);
             if (dist < minDist) {
                 minDist = dist;
@@ -232,21 +195,19 @@ public class GuiController {
     //                     Обработка клавиатуры
     // ---------------------------------------------------------------
     public void handleKey(KeyCode code) {
-        // Удаление выбранного элемента
-        if ((code == KeyCode.DELETE || code == KeyCode.BACK_SPACE) && selectedModelIndex >= 0) {
-            Model model = sceneObjects.get(selectedModelIndex).getModel();
+        if (selectedModelIndex < 0) return;
 
+        if (code == KeyCode.DELETE || code == KeyCode.BACK_SPACE) {
+            Model model = sceneObjects.get(selectedModelIndex).getModel();
             if (editMode == EditMode.VERTEX && selectedVertexIndex >= 0) {
                 model.removeVertex(selectedVertexIndex);
                 selectedVertexIndex = -1;
                 showNotification("Vertex deleted successfully", "success");
-            }
-            else if (editMode == EditMode.POLYGON && selectedPolygonIndex >= 0) {
+            } else if (editMode == EditMode.POLYGON && selectedPolygonIndex >= 0) {
                 model.removePolygon(selectedPolygonIndex);
                 selectedPolygonIndex = -1;
                 showNotification("Polygon deleted successfully", "success");
             }
-            return;
         }
     }
 
@@ -275,8 +236,7 @@ public class GuiController {
     // ---------------------------------------------------------------
     //                    Загрузка / Сохранение
     // ---------------------------------------------------------------
-    @FXML
-    private void onOpenModelMenuItemClick() {
+    @FXML private void onOpenModelMenuItemClick() {
         FileChooser fc = new FileChooser();
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("OBJ (*.obj)", "*.obj"));
         File file = fc.showOpenDialog(getStage());
@@ -291,12 +251,10 @@ public class GuiController {
             showNotification("Model loaded: " + file.getName(), "success");
         } catch (IOException | ObjReaderException e) {
             showError("Ошибка загрузки модели", e.getMessage());
-            showNotification("Failed to load model: " + e.getMessage(), "error");
         }
     }
 
-    @FXML
-    private void onSaveModelMenuItemClick() {
+    @FXML private void onSaveModelMenuItemClick() {
         if (selectedModelIndex < 0) {
             showError("Нет выбранной модели", "Выберите модель для сохранения");
             return;
@@ -315,38 +273,39 @@ public class GuiController {
             showNotification("Model saved: " + file.getName(), "success");
         } catch (Exception e) {
             showError("Ошибка сохранения", e.getMessage());
-            showNotification("Failed to save model: " + e.getMessage(), "error");
         }
     }
 
     // ---------------------------------------------------------------
     //                     Камера (из меню Camera Options)
     // ---------------------------------------------------------------
-    @FXML public void handleCameraForward (ActionEvent e) {
-        camera.movePosition(new Vector3f(0, 0, -TRANSLATION));
+    @FXML public void handleCameraForward(ActionEvent e) {
+        camera.movePosition(new Vector3f(0, 0, -TRANSLATION_STEP));
     }
     @FXML public void handleCameraBackward(ActionEvent e) {
-        camera.movePosition(new Vector3f(0, 0,  TRANSLATION));
+        camera.movePosition(new Vector3f(0, 0, TRANSLATION_STEP));
     }
-    @FXML public void handleCameraLeft    (ActionEvent e) {
-        camera.movePosition(new Vector3f( TRANSLATION, 0, 0));
+    @FXML public void handleCameraLeft(ActionEvent e) {
+        camera.movePosition(new Vector3f(-TRANSLATION_STEP, 0, 0));
     }
-    @FXML public void handleCameraRight   (ActionEvent e) {
-        camera.movePosition(new Vector3f(-TRANSLATION, 0, 0));
+    @FXML public void handleCameraRight(ActionEvent e) {
+        camera.movePosition(new Vector3f(TRANSLATION_STEP, 0, 0));
     }
-    @FXML public void handleCameraUp      (ActionEvent e) {
-        camera.movePosition(new Vector3f(0,  TRANSLATION, 0));
+    @FXML public void handleCameraUp(ActionEvent e) {
+        camera.movePosition(new Vector3f(0, TRANSLATION_STEP, 0));
     }
-    @FXML public void handleCameraDown    (ActionEvent e) {
-        camera.movePosition(new Vector3f(0, -TRANSLATION, 0));
+    @FXML public void handleCameraDown(ActionEvent e) {
+        camera.movePosition(new Vector3f(0, -TRANSLATION_STEP, 0));
     }
 
-    @FXML
-    public void resetCamera() {
+    @FXML public void resetCamera() {
         camera = new Camera(
-                new Vector3f(0, 0, 100),
+                new Vector3f(0, 0, 5),
                 new Vector3f(0, 0, 0),
-                1.0F, 1, 0.01F, 100
+                60.0F,
+                (float) (canvas.getWidth() / canvas.getHeight()),
+                0.1F,
+                100.0F
         );
         showNotification("Camera reset to default position", "info");
     }
@@ -354,10 +313,10 @@ public class GuiController {
     // ---------------------------------------------------------------
     //                     Вспомогательные методы
     // ---------------------------------------------------------------
-    private Matrix4f getMVPForSelectedModel() {
-        if (selectedModelIndex < 0) return new Matrix4f();
+    private Matrix4f getMVPForModel(int modelIndex) {
+        if (modelIndex < 0 || modelIndex >= sceneObjects.size()) return Matrix4f.identity();
 
-        SceneObject so = sceneObjects.get(selectedModelIndex);
+        SceneObject so = sceneObjects.get(modelIndex);
         Matrix4f modelMatrix = so.getTransform();
         Matrix4f viewMatrix = camera.getViewMatrix();
         Matrix4f projMatrix = camera.getProjectionMatrix();
@@ -366,6 +325,11 @@ public class GuiController {
         mvp.mul(viewMatrix);
         mvp.mul(projMatrix);
         return mvp;
+    }
+
+    private Matrix4f getMVPForSelectedModel() {
+        if (selectedModelIndex < 0) return Matrix4f.identity();
+        return getMVPForModel(selectedModelIndex);
     }
 
     private void showError(String title, String message) {
@@ -378,14 +342,6 @@ public class GuiController {
 
     private Stage getStage() {
         return (Stage) canvas.getScene().getWindow();
-    }
-
-    // Методы для работы с переключением режимов и выбором модели
-    private boolean modelMode = false;
-
-    @FXML
-    public void toggleMode() {
-        modelMode = !modelMode;
     }
 
     public List<SceneObject> getSceneObjects() {
@@ -408,15 +364,10 @@ public class GuiController {
         showNotification("Selected model: " + sceneObjects.get(selectedModelIndex).getName(), "info");
     }
 
-    @FXML
-    private void toggleTheme() {
+    @FXML private void toggleTheme() {
         isDarkTheme = !isDarkTheme;
-
-        // Удаляем текущий класс темы
         anchorPane.getStyleClass().remove("anchor-pane-dark");
         anchorPane.getStyleClass().remove("anchor-pane-light");
-
-        // Добавляем новый класс темы
         if (isDarkTheme) {
             anchorPane.getStyleClass().add("anchor-pane-dark");
             showNotification("Dark theme enabled", "info");
@@ -438,7 +389,6 @@ public class GuiController {
         notificationContainer.getChildren().add(notification);
         notificationContainer.setVisible(true);
 
-        // Автоудаление через 3 секунды
         PauseTransition delay = new PauseTransition(Duration.seconds(3));
         delay.setOnFinished(e -> {
             notificationContainer.getChildren().remove(notification);
@@ -452,8 +402,7 @@ public class GuiController {
     // ---------------------------------------------------------------
     //                     Дополнительные методы
     // ---------------------------------------------------------------
-    @FXML
-    private void clearAllModels() {
+    @FXML private void clearAllModels() {
         sceneObjects.clear();
         selectedModelIndex = -1;
         selectedVertexIndex = -1;
@@ -461,8 +410,7 @@ public class GuiController {
         showNotification("All models cleared", "info");
     }
 
-    @FXML
-    private void showAbout() {
+    @FXML private void showAbout() {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("About");
         alert.setHeaderText("3D Model Editor");
@@ -475,4 +423,34 @@ public class GuiController {
                 "• Dark/Light theme support");
         alert.showAndWait();
     }
+    /**
+     * Переключает режим редактирования между:
+     * - NONE (выбор объектов)
+     * - VERTEX (выбор вершин)
+     * - POLYGON (выбор полигонов)
+     */
+    @FXML
+    public void toggleMode() {
+        switch (editMode) {
+            case NONE:
+                editMode = EditMode.VERTEX;
+                selectedVertexIndex = -1;
+                selectedPolygonIndex = -1;
+                showNotification("Vertex selection mode activated", "info");
+                break;
+            case VERTEX:
+                editMode = EditMode.POLYGON;
+                selectedVertexIndex = -1;
+                selectedPolygonIndex = -1;
+                showNotification("Polygon selection mode activated", "info");
+                break;
+            case POLYGON:
+                editMode = EditMode.NONE;
+                selectedVertexIndex = -1;
+                selectedPolygonIndex = -1;
+                showNotification("Object selection mode activated", "info");
+                break;
+        }
+    }
+
 }
